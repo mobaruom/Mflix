@@ -1,0 +1,30 @@
+body{
+background:url(https://image.freepik.com/vecteurs-libre/fond-ecran-noir-fond-lignes-mouvement_1017-30151.jpg) no-repeat ;
+background-size: 100%
+
+}
+h2.catalog{
+color: #ffffff;
+font-style: normal;
+font-variant: normal;
+}
+nav.menu-nav ul li.btn{
+ list-style-type: none;
+  display: inline-block;
+  font-size :	30px;
+  padding-left: 1px
+}
+
+nav.menu-nav ul li.btn a{
+    color: white;
+ }
+    
+nav.menu-nav ul li.btn:hover a{
+	color: black;
+	background-color: white;
+	transition: 0.7s;
+
+}
+button {
+	background-color: black;
+}
