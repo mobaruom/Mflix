@@ -31,3 +31,27 @@ button {
 p.pc{
 	color:white;
 }
+
+
+h3.e{
+	color: white;
+}
+h3.e:hover{
+	color:red;
+	 transition: 0.7s;
+}
+
+p{
+	color: white;
+}
+p.z:hover{
+	color:red;
+	 transition: 0.7s;
+}
+h3.r{
+	color: white
+}
+h3.r:hover{
+    color:red;
+    transition: 0.7s;
+}
