@@ -1,31 +1,354 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
-	<title>Mflix</title>
-	<link href="data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAsP8AACk0DAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAiIiIiIiIAACEhIiIiEgAAISESIiISAAAhISIiIhIAACEhESIiEgAAISIiIiISAAAhIiESIhIAACEiEREiEgAAISESIRISAAAhESIiERIAACESIiIhEgAAIiIiIiIiAAAAAAAAAAAAAAAAAAAAAAD//wAA//8AAMADAADAAwAAwAMAAMADAADAAwAAwAMAAMADAADAAwAAwAMAAMADAADAAwAAwAMAAP//AAD//wAA" rel="icon" type="image/x-icon" />
-<meta charset="utf-8">
-<link rel="stylesheet" type="text/css" href="mon site/css/styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculateur Euro</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f5f4f0;
+      --surface: #ffffff;
+      --border: #e0ddd6;
+      --text: #1a1a18;
+      --muted: #888880;
+      --accent: #2d6a4f;
+      --accent-light: #e8f5ee;
+      --mono: 'DM Mono', monospace;
+      --sans: 'DM Sans', sans-serif;
+    }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 32px 16px 64px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 420px;
+    }
+
+    header {
+      margin-bottom: 28px;
+    }
+
+    header h1 {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    header p {
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .table-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    }
+
+    .table-header {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      padding: 10px 16px;
+      background: var(--text);
+      color: #fff;
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .table-header span:nth-child(2),
+    .row-qty { text-align: center; }
+    .table-header span:nth-child(3),
+    .row-sub { text-align: right; }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      align-items: center;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+
+    .row:last-child { border-bottom: none; }
+    .row:hover { background: #fafaf8; }
+
+    .row-label {
+      font-family: var(--mono);
+      font-size: 15px;
+      font-weight: 500;
+      padding: 14px 0;
+      color: var(--text);
+    }
+
+    .row-qty {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .qty-btn {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: 1.5px solid var(--border);
+      background: transparent;
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.12s;
+      user-select: none;
+    }
+
+    .qty-btn:hover {
+      background: var(--text);
+      color: #fff;
+      border-color: var(--text);
+    }
+
+    .qty-input {
+      width: 36px;
+      text-align: center;
+      border: none;
+      background: transparent;
+      font-family: var(--mono);
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text);
+      outline: none;
+    }
+
+    /* Remove number arrows */
+    .qty-input::-webkit-inner-spin-button,
+    .qty-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+    .qty-input { -moz-appearance: textfield; }
+
+    .row-sub {
+      font-family: var(--mono);
+      font-size: 14px;
+      color: var(--muted);
+      text-align: right;
+      padding: 14px 0;
+    }
+
+    .row-sub.has-value { color: var(--accent); font-weight: 500; }
+
+    .total-section {
+      margin-top: 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    }
+
+    .total-label {
+      font-family: var(--mono);
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .total-amount {
+      font-family: var(--mono);
+      font-size: 28px;
+      font-weight: 500;
+      color: var(--text);
+      transition: all 0.2s;
+    }
+
+    .total-amount.big { color: var(--accent); }
+
+    .reset-btn {
+      margin-top: 14px;
+      width: 100%;
+      padding: 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      background: transparent;
+      font-family: var(--mono);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .reset-btn:hover {
+      border-color: #c0392b;
+      color: #c0392b;
+    }
+
+    @media (max-width: 360px) {
+      .qty-btn { width: 22px; height: 22px; font-size: 14px; }
+      .qty-input { width: 28px; font-size: 13px; }
+      .row-label, .row-sub { font-size: 13px; }
+    }
+  </style>
 </head>
 <body>
-	<p class="pc">uniquemetn pour pc</p>
+<div class="app">
+  <header>
+    <h1>Calculateur</h1>
+    <p>Compter mon cash 💶</p>
+  </header>
 
-<center>
+  <div class="table-wrap">
+    <div class="table-header">
+      <span>Billet / Pièce</span>
+      <span>Qté</span>
+      <span>Sous-total</span>
+    </div>
+    <div id="rows"></div>
+  </div>
 
-<nav class="menu-nav">
-	<ul>
-		<button>
-	<li class="btn"> <a href="index.html">&nbsp;catalog&nbsp;</a>
-	</li>	
-     
-     <li class="btn"> <a href="news.html">&nbsp;&nbsp;info&nbsp;&nbsp;</a>
-	</li>	
+  <div class="total-section">
+    <span class="total-label">Total</span>
+    <span class="total-amount" id="total">0,00 €</span>
+  </div>
 
-	<li class="btn"> <a href="contact.html">&nbsp;contact&nbsp;</a>
-	</li>
-   </button>
-	</ul>
-</nav>
-</center>
+  <button class="reset-btn" onclick="resetAll()">↺ &nbsp;Tout réinitialiser</button>
+  <p id="last-saved" style="margin-top:10px; text-align:center; font-family:'DM Mono',monospace; font-size:11px; color:#aaa; letter-spacing:0.05em;"></p>
+</div>
 
+<script>
+  const denominations = [
+    { label: "0,01 €", value: 0.01 },
+    { label: "0,02 €", value: 0.02 },
+    { label: "0,05 €", value: 0.05 },
+    { label: "0,10 €", value: 0.10 },
+    { label: "0,20 €", value: 0.20 },
+    { label: "0,50 €", value: 0.50 },
+    { label: "1,00 €", value: 1 },
+    { label: "2,00 €", value: 2 },
+    { label: "5,00 €", value: 5 },
+    { label: "10,00 €", value: 10 },
+    { label: "20,00 €", value: 20 },
+    { label: "50,00 €", value: 50 },
+    { label: "100,00 €", value: 100 },
+    { label: "200,00 €", value: 200 },
+    { label: "500,00 €", value: 500 },
+  ];
+
+  const STORAGE_KEY = 'euro-calculator-v1';
+
+  // Load saved quantities or default to 0
+  const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+  const quantities = saved && saved.quantities && saved.quantities.length === denominations.length
+    ? saved.quantities
+    : new Array(denominations.length).fill(0);
+
+  function fmt(n) {
+    return n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+  }
+
+  function saveData() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      quantities,
+      updatedAt: new Date().toISOString()
+    }));
+    // Update "last saved" label
+    const lbl = document.getElementById('last-saved');
+    if (lbl) {
+      const now = new Date();
+      lbl.textContent = 'Sauvegardé à ' + now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    }
+  }
+
+  function updateTotal() {
+    let total = 0;
+    denominations.forEach((d, i) => { total += d.value * quantities[i]; });
+    const el = document.getElementById('total');
+    el.textContent = fmt(total);
+    el.classList.toggle('big', total > 0);
+
+    denominations.forEach((_, i) => {
+      const sub = document.getElementById('sub-' + i);
+      const val = denominations[i].value * quantities[i];
+      sub.textContent = val > 0 ? fmt(val) : '—';
+      sub.className = 'row-sub' + (val > 0 ? ' has-value' : '');
+    });
+
+    saveData();
+  }
+
+  function changeQty(i, delta) {
+    quantities[i] = Math.max(0, quantities[i] + delta);
+    document.getElementById('qty-' + i).value = quantities[i];
+    updateTotal();
+  }
+
+  function onInput(i) {
+    const raw = parseInt(document.getElementById('qty-' + i).value) || 0;
+    quantities[i] = Math.max(0, raw);
+    document.getElementById('qty-' + i).value = quantities[i];
+    updateTotal();
+  }
+
+  function resetAll() {
+    if (!confirm('Remettre tous les compteurs à zéro ?')) return;
+    quantities.fill(0);
+    denominations.forEach((_, i) => {
+      document.getElementById('qty-' + i).value = 0;
+    });
+    updateTotal();
+  }
+
+  // Render rows
+  const container = document.getElementById('rows');
+  denominations.forEach((d, i) => {
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.innerHTML = `
+      <span class="row-label">${d.label}</span>
+      <div class="row-qty">
+        <button class="qty-btn" onclick="changeQty(${i}, -1)">−</button>
+        <input class="qty-input" id="qty-${i}" type="number" value="${quantities[i]}" min="0" oninput="onInput(${i})" />
+        <button class="qty-btn" onclick="changeQty(${i}, 1)">+</button>
+      </div>
+      <span class="row-sub" id="sub-${i}">—</span>
+    `;
+    container.appendChild(row);
+  });
+
+  // Show last saved date if exists
+  if (saved && saved.updatedAt) {
+    const d = new Date(saved.updatedAt);
+    const lbl = document.getElementById('last-saved');
+    if (lbl) lbl.textContent = 'Dernière sauvegarde : ' + d.toLocaleDateString('fr-FR') + ' à ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  updateTotal();
+</script>
 </body>
 </html>
