@@ -1,554 +1,332 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Calculateur Euro</title>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;600&display=swap" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Calculateur Patrimoine</title>
 
-    :root {
-      --bg: #f5f4f0;
-      --surface: #ffffff;
-      --border: #e0ddd6;
-      --text: #1a1a18;
-      --muted: #888880;
-      --accent: #2d6a4f;
-      --mono: 'DM Mono', monospace;
-      --sans: 'DM Sans', sans-serif;
-    }
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;600&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-    body {
-      font-family: var(--sans);
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      display: flex;
-      align-items: flex-start;
-      justify-content: center;
-      padding: 32px 16px 64px;
-    }
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
-    .app {
-      width: 100%;
-      max-width: 420px;
-    }
+:root{
+--bg:#f5f4f0;
+--surface:#fff;
+--border:#e0ddd6;
+--text:#1a1a18;
+--muted:#888880;
+--accent:#2d6a4f;
+--mono:'DM Mono',monospace;
+--sans:'DM Sans',sans-serif;
+}
 
-    header {
-      margin-bottom: 28px;
-    }
+body{
+font-family:var(--sans);
+background:var(--bg);
+color:var(--text);
+padding:24px;
+display:flex;
+justify-content:center;
+}
 
-    header h1 {
-      font-family: var(--mono);
-      font-size: 13px;
-      font-weight: 500;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 4px;
-    }
+.app{width:100%;max-width:420px}
 
-    header p {
-      font-size: 22px;
-      font-weight: 600;
-      color: var(--text);
-    }
+/* HEADER + MENU */
+header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:20px;
+}
 
-    /* === SECTION OBJECTIF AMÉLIORÉE === */
-    .goal-section {
-      margin-top: 20px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 16px 18px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-    }
+h1{font-family:var(--mono);font-size:13px;color:var(--muted);text-transform:uppercase}
+p{font-size:20px;font-weight:600}
 
-    .goal-input {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
+.menu-btn{
+border:1px solid var(--border);
+background:var(--surface);
+padding:8px 10px;
+border-radius:8px;
+cursor:pointer;
+}
 
-    .goal-input label {
-      font-family: var(--mono);
-      font-size: 13.5px;
-      color: var(--muted);
-      white-space: nowrap;
-    }
+.menu{
+display:none;
+background:var(--surface);
+border:1px solid var(--border);
+border-radius:10px;
+padding:10px;
+margin-bottom:15px;
+}
 
-    .goal-input input {
-      flex: 1;
-      min-width: 120px;
-      padding: 10px 12px;
-      border: 1.5px solid var(--border);
-      border-radius: 8px;
-      font-family: var(--mono);
-      font-size: 18px;
-      text-align: right;
-    }
+.menu button{
+width:100%;
+padding:10px;
+border:none;
+background:none;
+text-align:left;
+cursor:pointer;
+font-family:var(--mono);
+}
 
-    .progress-container {
-      margin-top: 14px;
-    }
+.menu button:hover{background:#f2f2f2}
 
-    .progress-info {
-      display: flex;
-      justify-content: space-between;
-      font-size: 13px;
-      margin-bottom: 8px;
-      font-family: var(--mono);
-      flex-wrap: wrap;
-      gap: 6px;
-    }
+/* TABLE */
+.table-wrap{
+background:var(--surface);
+border:1px solid var(--border);
+border-radius:12px;
+overflow:hidden;
+margin-top:15px;
+}
 
-    .progress-bar {
-      height: 8px;
-      background: #e0ddd6;
-      border-radius: 9999px;
-      overflow: hidden;
-    }
+.table-header,.row{
+display:grid;
+grid-template-columns:1fr 1fr 1fr;
+padding:10px;
+}
 
-    .progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--accent), #4ade80);
-      transition: width 0.3s ease;
-    }
+.table-header{
+background:var(--text);
+color:#fff;
+font-family:var(--mono);
+font-size:11px;
+text-transform:uppercase;
+}
 
-    /* === Le reste du style reste identique === */
-    .table-wrap {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-      margin-top: 20px;
-    }
+.row{border-bottom:1px solid var(--border)}
 
-    .table-header {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      padding: 10px 16px;
-      background: var(--text);
-      color: #fff;
-      font-family: var(--mono);
-      font-size: 11px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
+.row-label{font-family:var(--mono)}
 
-    .table-header span:nth-child(2),
-    .row-qty { text-align: center; }
-    .table-header span:nth-child(3),
-    .row-sub { text-align: right; }
+.row-qty{text-align:center}
+.row-sub{text-align:right}
 
-    .row {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      align-items: center;
-      padding: 0 16px;
-      border-bottom: 1px solid var(--border);
-      transition: background 0.15s;
-    }
+/* ACCOUNTS */
+.accounts{
+margin-top:20px;
+background:var(--surface);
+border:1px solid var(--border);
+border-radius:12px;
+padding:12px;
+}
 
-    .row:last-child { border-bottom: none; }
-    .row:hover { background: #fafaf8; }
+.account{
+display:flex;
+justify-content:space-between;
+margin:6px 0;
+font-family:var(--mono);
+}
 
-    .row-label {
-      font-family: var(--mono);
-      font-size: 15px;
-      font-weight: 500;
-      padding: 14px 0;
-      color: var(--text);
-    }
+.add-account{
+margin-top:10px;
+display:flex;
+gap:8px;
+}
 
-    .row-qty {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
+.add-account input{
+flex:1;
+padding:8px;
+border:1px solid var(--border);
+border-radius:8px;
+}
 
-    .qty-btn {
-      width: 26px;
-      height: 26px;
-      border-radius: 50%;
-      border: 1.5px solid var(--border);
-      background: transparent;
-      cursor: pointer;
-      font-size: 16px;
-      line-height: 1;
-      color: var(--text);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.12s;
-      user-select: none;
-    }
+/* TOTALS */
+.total{
+margin-top:15px;
+background:var(--surface);
+border:1px solid var(--border);
+border-radius:12px;
+padding:12px;
+font-family:var(--mono);
+}
 
-    .qty-btn:hover {
-      background: var(--text);
-      color: #fff;
-      border-color: var(--text);
-    }
-
-    .qty-input {
-      width: 36px;
-      text-align: center;
-      border: none;
-      background: transparent;
-      font-family: var(--mono);
-      font-size: 15px;
-      font-weight: 500;
-      color: var(--text);
-      outline: none;
-    }
-
-    .qty-input::-webkit-inner-spin-button,
-    .qty-input::-webkit-outer-spin-button { -webkit-appearance: none; }
-    .qty-input { -moz-appearance: textfield; }
-
-    .row-sub {
-      font-family: var(--mono);
-      font-size: 14px;
-      color: var(--muted);
-      text-align: right;
-      padding: 14px 0;
-    }
-
-    .row-sub.has-value { color: var(--accent); font-weight: 500; }
-
-    .totals-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-top: 20px;
-    }
-
-    .total-section {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 16px 18px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-    }
-
-    .total-label {
-      font-family: var(--mono);
-      font-size: 12px;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--muted);
-      display: block;
-      margin-bottom: 4px;
-    }
-
-    .total-amount {
-      font-family: var(--mono);
-      font-size: 23px;
-      font-weight: 500;
-      color: var(--text);
-    }
-
-    .total-amount.big { color: var(--accent); }
-
-    .pie-container {
-      margin: 32px 0 20px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px;
-      text-align: center;
-    }
-
-    .pie-title {
-      font-family: var(--mono);
-      font-size: 13px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 16px;
-    }
-
-    .reset-btn {
-      margin-top: 20px;
-      width: 100%;
-      padding: 12px;
-      border: 1.5px solid var(--border);
-      border-radius: 8px;
-      background: transparent;
-      font-family: var(--mono);
-      font-size: 12px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--muted);
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-
-    .reset-btn:hover {
-      border-color: #c0392b;
-      color: #c0392b;
-    }
-
-    @media (max-width: 380px) {
-      .goal-input label { font-size: 13px; }
-      .goal-input input { font-size: 17px; padding: 9px 10px; }
-      .total-amount { font-size: 21px; }
-      .row-label, .row-sub { font-size: 14px; }
-    }
-  </style>
+button{cursor:pointer}
+</style>
 </head>
+
 <body>
 <div class="app">
-  <header>
-    <h1>Calculateur</h1>
-    <p>Compter mon cash 💶</p>
-  </header>
 
-  <!-- Section Objectif -->
-  <div class="goal-section">
-    <div class="goal-input">
-      <label>Objectif d'épargne :</label>
-      <input type="number" id="goal-input" value="0" min="0" step="10" oninput="updateGoal()">
-    </div>
-    <div class="progress-container" id="progress-container" style="display: none;">
-      <div class="progress-info">
-        <span id="progress-text">0 % atteint</span>
-        <span id="goal-remaining">0,00 € restant</span>
-      </div>
-      <div class="progress-bar">
-        <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
-      </div>
-    </div>
-  </div>
+<header>
+<div>
+<h1>Patrimoine</h1>
+<p>Cash & Banque 💶</p>
+</div>
+<button class="menu-btn" onclick="toggleMenu()">☰</button>
+</header>
 
-  <div class="table-wrap">
-    <div class="table-header">
-      <span>Billet / Pièce</span>
-      <span>Qté</span>
-      <span>Sous-total</span>
-    </div>
-    <div id="rows"></div>
-  </div>
+<!-- MENU -->
+<div class="menu" id="menu">
+<button onclick="exportPDF()">📄 Exporter PDF</button>
+</div>
 
-  <div class="totals-grid">
-    <div class="total-section">
-      <span class="total-label">Total Pièces</span>
-      <span class="total-amount" id="total-coins">0,00 €</span>
-    </div>
-    <div class="total-section">
-      <span class="total-label">Total Billets</span>
-      <span class="total-amount" id="total-bills">0,00 €</span>
-    </div>
-  </div>
+<!-- CASH -->
+<div class="table-wrap">
+<div class="table-header">
+<span>Billet / Pièce</span>
+<span>Qté</span>
+<span>Total</span>
+</div>
+<div id="rows"></div>
+</div>
 
-  <div class="total-section">
-    <span class="total-label">Total Général</span>
-    <span class="total-amount" id="total">0,00 €</span>
-  </div>
+<!-- ACCOUNTS -->
+<div class="accounts">
+<h3 style="font-family:var(--mono);font-size:12px;margin-bottom:8px;">Comptes bancaires</h3>
 
-  <div class="pie-container">
-    <div class="pie-title">Répartition du cash + progrès épargne</div>
-    <canvas id="pieChart" width="300" height="300"></canvas>
-  </div>
+<div id="accounts-list"></div>
 
-  <button class="reset-btn" onclick="resetAll()">↺ &nbsp;Tout réinitialiser</button>
-  <p id="last-saved" style="margin-top:10px; text-align:center; font-family:'DM Mono',monospace; font-size:11px; color:#aaa; letter-spacing:0.05em;"></p>
+<div class="add-account">
+<input id="acc-name" placeholder="Nom compte"/>
+<input id="acc-value" type="number" placeholder="€"/>
+<button onclick="addAccount()">+</button>
+</div>
+</div>
+
+<!-- TOTAL -->
+<div class="total">
+Cash: <span id="cash-total">0</span> €<br>
+Banque: <span id="bank-total">0</span> €<br>
+<b>Total: <span id="global-total">0</span> €</b>
+</div>
+
+<canvas id="chart" style="margin-top:15px"></canvas>
+
 </div>
 
 <script>
-  // (Le script reste exactement le même que précédemment)
-  const denominations = [
-    { label: "0,01 €", value: 0.01, type: "coin" },
-    { label: "0,02 €", value: 0.02, type: "coin" },
-    { label: "0,05 €", value: 0.05, type: "coin" },
-    { label: "0,10 €", value: 0.10, type: "coin" },
-    { label: "0,20 €", value: 0.20, type: "coin" },
-    { label: "0,50 €", value: 0.50, type: "coin" },
-    { label: "1,00 €", value: 1, type: "coin" },
-    { label: "2,00 €", value: 2, type: "coin" },
-    { label: "5,00 €", value: 5, type: "bill" },
-    { label: "10,00 €", value: 10, type: "bill" },
-    { label: "20,00 €", value: 20, type: "bill" },
-    { label: "50,00 €", value: 50, type: "bill" },
-    { label: "100,00 €", value: 100, type: "bill" },
-    { label: "200,00 €", value: 200, type: "bill" },
-    { label: "500,00 €", value: 500, type: "bill" },
-  ];
+/* CASH DENOMINATIONS (modifié) */
+const denominations=[
+{label:"0,10 €",value:0.10},
+{label:"0,20 €",value:0.20},
+{label:"0,50 €",value:0.50},
+{label:"1 €",value:1},
+{label:"2 €",value:2},
+{label:"5 €",value:5},
+{label:"10 €",value:10},
+{label:"20 €",value:20},
+{label:"50 €",value:50},
+{label:"100 €",value:100},
+{label:"200 €",value:200},
+{label:"500 €",value:500}
+];
 
-  const STORAGE_KEY = 'euro-calculator-v2';
+const STORAGE="patrimoine-v1";
 
-  let saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
-  const quantities = saved && saved.quantities && saved.quantities.length === denominations.length
-    ? saved.quantities
-    : new Array(denominations.length).fill(0);
-  
-  let savingsGoal = saved && saved.savingsGoal ? saved.savingsGoal : 0;
-  let pieChart;
+let data=JSON.parse(localStorage.getItem(STORAGE)||"{}");
+let quantities=data.quantities||Array(denominations.length).fill(0);
+let accounts=data.accounts||[];
 
-  function fmt(n) {
-    return n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
-  }
+function save(){
+localStorage.setItem(STORAGE,JSON.stringify({quantities,accounts}));
+update();
+}
 
-  function saveData() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      quantities,
-      savingsGoal,
-      updatedAt: new Date().toISOString()
-    }));
-    const lbl = document.getElementById('last-saved');
-    if (lbl) {
-      const now = new Date();
-      lbl.textContent = 'Sauvegardé à ' + now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-    }
-  }
+/* RENDER CASH */
+const rows=document.getElementById("rows");
 
-  function calculateTotals() {
-    let totalCoins = 0, totalBills = 0, total = 0;
-    denominations.forEach((d, i) => {
-      const amount = d.value * quantities[i];
-      total += amount;
-      if (d.type === "coin") totalCoins += amount;
-      else totalBills += amount;
-    });
-    return { totalCoins, totalBills, total };
-  }
+denominations.forEach((d,i)=>{
+const r=document.createElement("div");
+r.className="row";
+r.innerHTML=`
+<div class="row-label">${d.label}</div>
+<div class="row-qty">
+<input type="number" value="${quantities[i]}" onchange="setQty(${i},this.value)" style="width:50px;text-align:center"/>
+</div>
+<div class="row-sub" id="sub-${i}">0</div>`;
+rows.appendChild(r);
+});
 
-  function updateTotals() {
-    const { totalCoins, totalBills, total } = calculateTotals();
+function setQty(i,v){
+quantities[i]=parseInt(v)||0;
+save();
+}
 
-    document.getElementById('total').textContent = fmt(total);
-    document.getElementById('total').classList.toggle('big', total > 0);
-    document.getElementById('total-coins').textContent = fmt(totalCoins);
-    document.getElementById('total-bills').textContent = fmt(totalBills);
+/* ACCOUNTS */
+function renderAccounts(){
+const el=document.getElementById("accounts-list");
+el.innerHTML="";
+accounts.forEach((a,i)=>{
+el.innerHTML+=`
+<div class="account">
+<span>${a.name}</span>
+<span>${a.value} €</span>
+</div>`;
+});
+}
 
-    denominations.forEach((_, i) => {
-      const sub = document.getElementById('sub-' + i);
-      const val = denominations[i].value * quantities[i];
-      sub.textContent = val > 0 ? fmt(val) : '—';
-      sub.className = 'row-sub' + (val > 0 ? ' has-value' : '');
-    });
+function addAccount(){
+const name=document.getElementById("acc-name").value;
+const value=parseFloat(document.getElementById("acc-value").value);
+if(!name||!value)return;
+accounts.push({name,value});
+save();
+}
 
-    updateGoalDisplay();
-    updatePieChart();
-    saveData();
-  }
+/* TOTALS */
+function update(){
+let cash=0;
 
-  function updateGoal() {
-    savingsGoal = parseFloat(document.getElementById('goal-input').value) || 0;
-    updateTotals();
-  }
+quantities.forEach((q,i)=>{
+const val=q*denominations[i].value;
+cash+=val;
+document.getElementById("sub-"+i).innerText=val.toFixed(2)+" €";
+});
 
-  function updateGoalDisplay() {
-    const { total } = calculateTotals();
-    const progressContainer = document.getElementById('progress-container');
-    
-    if (savingsGoal > 0) {
-      progressContainer.style.display = 'block';
-      const percentage = Math.min(100, Math.round((total / savingsGoal) * 100));
-      document.getElementById('progress-fill').style.width = percentage + '%';
-      document.getElementById('progress-text').textContent = percentage + ' % atteint';
-      
-      const remaining = Math.max(0, savingsGoal - total);
-      document.getElementById('goal-remaining').textContent = fmt(remaining) + ' restant';
-    } else {
-      progressContainer.style.display = 'none';
-    }
-  }
+let bank=accounts.reduce((s,a)=>s+a.value,0);
 
-  function updatePieChart() {
-    const { totalCoins, totalBills, total } = calculateTotals();
-    const ctx = document.getElementById('pieChart');
-    if (pieChart) pieChart.destroy();
+document.getElementById("cash-total").innerText=cash.toFixed(2);
+document.getElementById("bank-total").innerText=bank.toFixed(2);
+document.getElementById("global-total").innerText=(cash+bank).toFixed(2);
 
-    const data = [], labels = [], colors = [];
+renderAccounts();
+drawChart(cash,bank);
+}
 
-    if (totalCoins > 0) { data.push(totalCoins); labels.push('Pièces'); colors.push('#4ade80'); }
-    if (totalBills > 0) { data.push(totalBills); labels.push('Billets'); colors.push('#2d6a4f'); }
-    
-    if (savingsGoal > 0) {
-      const remaining = Math.max(0, savingsGoal - total);
-      if (remaining > 0) {
-        data.push(remaining);
-        labels.push('Vers objectif');
-        colors.push('#e0ddd6');
-      } else if (total > 0) {
-        data.push(total);
-        labels.push('Objectif atteint');
-        colors.push('#22c55e');
-      }
-    }
+/* MENU */
+function toggleMenu(){
+document.getElementById("menu").style.display=
+document.getElementById("menu").style.display==="block"?"none":"block";
+}
 
-    if (data.length === 0) {
-      data.push(1); labels.push('Aucun montant'); colors.push('#e0ddd6');
-    }
+/* PDF EXPORT */
+function exportPDF(){
+const {jsPDF}=window.jspdf;
+const doc=new jsPDF();
 
-    pieChart = new Chart(ctx, {
-      type: 'pie',
-      data: { labels, datasets: [{ data, backgroundColor: colors, borderColor: '#ffffff', borderWidth: 3 }] },
-      options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        plugins: {
-          legend: { position: 'bottom', labels: { font: { family: 'DM Mono', size: 13 }, padding: 16 } },
-          tooltip: { callbacks: { label: (ctx) => fmt(ctx.raw) } }
-        }
-      }
-    });
-  }
+doc.setFont("helvetica","bold");
+doc.text("Patrimoine financier",20,20);
 
-  function changeQty(i, delta) {
-    quantities[i] = Math.max(0, quantities[i] + delta);
-    document.getElementById('qty-' + i).value = quantities[i];
-    updateTotals();
-  }
+doc.setFont("helvetica","normal");
+doc.text("Date: "+new Date().toLocaleString(),20,30);
 
-  function onInput(i) {
-    const raw = parseInt(document.getElementById('qty-' + i).value) || 0;
-    quantities[i] = Math.max(0, raw);
-    document.getElementById('qty-' + i).value = quantities[i];
-    updateTotals();
-  }
+doc.text("Cash: "+document.getElementById("cash-total").innerText+" €",20,50);
+doc.text("Banque: "+document.getElementById("bank-total").innerText+" €",20,60);
+doc.text("Total: "+document.getElementById("global-total").innerText+" €",20,70);
 
-  function resetAll() {
-    if (!confirm('Remettre tous les compteurs à zéro ?')) return;
-    quantities.fill(0);
-    savingsGoal = 0;
-    document.getElementById('goal-input').value = 0;
-    denominations.forEach((_, i) => document.getElementById('qty-' + i).value = 0);
-    updateTotals();
-  }
+doc.save("patrimoine.pdf");
+}
 
-  // Rendu des lignes
-  const container = document.getElementById('rows');
-  denominations.forEach((d, i) => {
-    const row = document.createElement('div');
-    row.className = 'row';
-    row.innerHTML = `
-      <span class="row-label">${d.label}</span>
-      <div class="row-qty">
-        <button class="qty-btn" onclick="changeQty(${i}, -1)">−</button>
-        <input class="qty-input" id="qty-${i}" type="number" value="${quantities[i]}" min="0" oninput="onInput(${i})" />
-        <button class="qty-btn" onclick="changeQty(${i}, 1)">+</button>
-      </div>
-      <span class="row-sub" id="sub-${i}">—</span>
-    `;
-    container.appendChild(row);
-  });
+/* CHART */
+let chart;
+function drawChart(cash,bank){
+const ctx=document.getElementById("chart");
 
-  document.getElementById('goal-input').value = savingsGoal;
+if(chart)chart.destroy();
 
-  if (saved && saved.updatedAt) {
-    const d = new Date(saved.updatedAt);
-    const lbl = document.getElementById('last-saved');
-    if (lbl) lbl.textContent = 'Dernière sauvegarde : ' + d.toLocaleDateString('fr-FR') + ' à ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-  }
+chart=new Chart(ctx,{
+type:"pie",
+data:{
+labels:["Cash","Banque"],
+datasets:[{data:[cash,bank]}]
+}
+});
+}
 
-  updateTotals();
+update();
 </script>
 </body>
 </html>
