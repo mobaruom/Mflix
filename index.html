@@ -305,11 +305,11 @@
   </div>
 
   <div class="pie-container">
-    <div class="pie-title">Répartition du cash + progrès épargne</div>
+    <div class="pie-title">Répartition complète</div>
     <canvas id="pieChart" width="300" height="300"></canvas>
   </div>
 
-  <!-- Section Comptes Bancaires -->
+  <!-- Comptes Bancaires -->
   <div class="bank-section">
     <h3 style="font-family:var(--mono); font-size:14px; margin-bottom:12px; color:var(--muted);">Comptes Bancaires</h3>
     <div id="bank-accounts-list"></div>
@@ -327,7 +327,6 @@
 </div>
 
 <script>
-  // Denominations corrigées : suppression des 0,01 / 0,02 / 0,05 €
   const denominations = [
     { label: "0,10 €", value: 0.10, type: "coin" },
     { label: "0,20 €", value: 0.20, type: "coin" },
@@ -343,7 +342,7 @@
     { label: "500,00 €", value: 500, type: "bill" },
   ];
 
-  const STORAGE_KEY = 'euro-calculator-v4';
+  const STORAGE_KEY = 'euro-calculator-v5';
 
   let quantities = new Array(denominations.length).fill(0);
   let savingsGoal = 0;
@@ -367,19 +366,20 @@
   }
 
   function calculateTotals() {
-    let totalCoins = 0, totalBills = 0, total = 0;
+    let totalCoins = 0, totalBills = 0, totalCash = 0;
     denominations.forEach((d, i) => {
       const amount = d.value * quantities[i];
-      total += amount;
+      totalCash += amount;
       if (d.type === "coin") totalCoins += amount;
       else totalBills += amount;
     });
-    return { totalCoins, totalBills, total };
+    const totalBank = bankAccounts.reduce((sum, acc) => sum + acc.amount, 0);
+    return { totalCoins, totalBills, totalCash, totalBank, grandTotal: totalCash + totalBank };
   }
 
   function updateTotals() {
-    const { totalCoins, totalBills, total } = calculateTotals();
-    document.getElementById('total').textContent = fmt(total);
+    const { totalCoins, totalBills, totalCash, totalBank, grandTotal } = calculateTotals();
+    document.getElementById('total').textContent = fmt(grandTotal);
     document.getElementById('total-coins').textContent = fmt(totalCoins);
     document.getElementById('total-bills').textContent = fmt(totalBills);
 
@@ -401,37 +401,46 @@
   }
 
   function updateGoalDisplay() {
-    const { total } = calculateTotals();
+    const { totalCash } = calculateTotals();
     const container = document.getElementById('progress-container');
     if (savingsGoal > 0) {
       container.style.display = 'block';
-      const perc = Math.min(100, Math.round((total / savingsGoal) * 100));
+      const perc = Math.min(100, Math.round((totalCash / savingsGoal) * 100));
       document.getElementById('progress-fill').style.width = perc + '%';
       document.getElementById('progress-text').textContent = perc + ' % atteint';
-      document.getElementById('goal-remaining').textContent = fmt(Math.max(0, savingsGoal - total)) + ' restant';
+      document.getElementById('goal-remaining').textContent = fmt(Math.max(0, savingsGoal - totalCash)) + ' restant';
     } else {
       container.style.display = 'none';
     }
   }
 
   function updatePieChart() {
-    const { totalCoins, totalBills, total } = calculateTotals();
+    const { totalCoins, totalBills, totalCash, totalBank } = calculateTotals();
     const ctx = document.getElementById('pieChart');
     if (pieChart) pieChart.destroy();
 
     const data = [], labels = [], colors = [];
+
     if (totalCoins > 0) { data.push(totalCoins); labels.push('Pièces'); colors.push('#4ade80'); }
     if (totalBills > 0) { data.push(totalBills); labels.push('Billets'); colors.push('#2d6a4f'); }
+    if (totalBank > 0) { data.push(totalBank); labels.push('Comptes Bancaires'); colors.push('#60a5fa'); }
     if (savingsGoal > 0) {
-      const rem = Math.max(0, savingsGoal - total);
+      const rem = Math.max(0, savingsGoal - totalCash);
       if (rem > 0) { data.push(rem); labels.push('Vers objectif'); colors.push('#e0ddd6'); }
     }
-    if (data.length === 0) { data.push(1); labels.push('Aucun'); colors.push('#e0ddd6'); }
+
+    if (data.length === 0) { data.push(1); labels.push('Aucun montant'); colors.push('#e0ddd6'); }
 
     pieChart = new Chart(ctx, {
       type: 'pie',
       data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 3, borderColor: '#fff' }] },
-      options: { responsive: true, plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: c => fmt(c.raw) } } } }
+      options: { 
+        responsive: true, 
+        plugins: { 
+          legend: { position: 'bottom' }, 
+          tooltip: { callbacks: { label: c => fmt(c.raw) } } 
+        } 
+      }
     });
   }
 
@@ -451,7 +460,10 @@
     if (!confirm('Tout réinitialiser ?')) return;
     quantities.fill(0);
     savingsGoal = 0;
+    bankAccounts = [];
     document.getElementById('goal-input').value = 0;
+    document.getElementById('bank-name').value = '';
+    document.getElementById('bank-amount').value = '';
     denominations.forEach((_, i) => document.getElementById('qty-' + i).value = 0);
     updateTotals();
   }
@@ -502,21 +514,21 @@
       document.getElementById('bank-name').value = '';
       document.getElementById('bank-amount').value = '';
       renderBankAccounts();
-      saveData();
+      updateTotals();
     }
   }
 
   function removeBankAccount(idx) {
     bankAccounts.splice(idx, 1);
     renderBankAccounts();
-    saveData();
+    updateTotals();
   }
 
-  // Export PDF (beau et coloré)
+  // Export PDF
   function exportToPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-    const { totalCoins, totalBills, total } = calculateTotals();
+    const { totalCoins, totalBills, totalCash, totalBank, grandTotal } = calculateTotals();
     const date = new Date().toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' });
 
     doc.setFont("helvetica");
@@ -528,7 +540,7 @@
 
     let y = 55;
     doc.setFontSize(13);
-    doc.text("Détail :", 20, y); y += 10;
+    doc.text("Détail cash :", 20, y); y += 10;
 
     denominations.forEach((d, i) => {
       if (quantities[i] > 0) {
@@ -541,26 +553,22 @@
     doc.text(`Total Pièces : ${fmt(totalCoins)}`, 20, y); y += 9;
     doc.text(`Total Billets : ${fmt(totalBills)}`, 20, y); y += 9;
     doc.setFontSize(15);
-    doc.text(`TOTAL GÉNÉRAL : ${fmt(total)}`, 20, y); y += 18;
+    doc.text(`TOTAL CASH : ${fmt(totalCash)}`, 20, y); y += 15;
 
-    if (savingsGoal > 0) {
-      const perc = Math.round((total / savingsGoal) * 100);
-      doc.text(`Objectif d'épargne : ${fmt(savingsGoal)} (${perc} % atteint)`, 20, y);
+    if (totalBank > 0) {
+      doc.text(`Comptes Bancaires : ${fmt(totalBank)}`, 20, y); y += 12;
     }
 
-    if (bankAccounts.length > 0) {
-      y += 15;
-      doc.text("Comptes Bancaires :", 20, y); y += 10;
-      bankAccounts.forEach(acc => {
-        doc.text(`${acc.name} : ${fmt(acc.amount)}`, 20, y);
-        y += 9;
-      });
+    doc.text(`GRAND TOTAL : ${fmt(grandTotal)}`, 20, y); y += 18;
+
+    if (savingsGoal > 0) {
+      const perc = Math.round((totalCash / savingsGoal) * 100);
+      doc.text(`Objectif d'épargne : ${fmt(savingsGoal)} (${perc} % atteint)`, 20, y);
     }
 
     doc.save(`cash_${new Date().toISOString().slice(0,10)}.pdf`);
   }
 
-  // Init
   renderBankAccounts();
   updateTotals();
 </script>
