@@ -44,9 +44,7 @@
       margin-bottom: 20px;
     }
 
-    header .title {
-      flex: 1;
-    }
+    header .title { flex: 1; }
 
     header h1 {
       font-family: var(--mono);
@@ -67,15 +65,11 @@
     .menu-btn {
       width: 40px;
       height: 40px;
-      border: none;
-      background: var(--surface);
       border: 1px solid var(--border);
+      background: var(--surface);
       border-radius: 50%;
       font-size: 20px;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
     }
 
     .menu {
@@ -99,14 +93,10 @@
       border-bottom: 1px solid var(--border);
       font-family: var(--mono);
       cursor: pointer;
-      transition: all 0.2s;
     }
 
-    .menu-item:hover {
-      background: #f8f7f4;
-    }
+    .menu-item:hover { background: #f8f7f4; }
 
-    /* Goal Section */
     .goal-section {
       margin-top: 20px;
       background: var(--surface);
@@ -140,18 +130,13 @@
       text-align: right;
     }
 
-    .progress-container {
-      margin-top: 14px;
-    }
-
+    .progress-container { margin-top: 14px; }
     .progress-info {
       display: flex;
       justify-content: space-between;
       font-size: 13px;
       margin-bottom: 8px;
       font-family: var(--mono);
-      flex-wrap: wrap;
-      gap: 6px;
     }
 
     .progress-bar {
@@ -167,15 +152,13 @@
       transition: width 0.3s ease;
     }
 
-    .table-wrap { margin-top: 20px; }
-
-    /* ... (le reste du CSS reste identique à la version précédente) ... */
     .table-wrap {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 12px;
       overflow: hidden;
       box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+      margin-top: 20px;
     }
 
     .table-header {
@@ -200,18 +183,47 @@
 
     .row:last-child { border-bottom: none; }
 
-    .row-label { font-family: var(--mono); font-size: 15px; font-weight: 500; padding: 14px 0; }
-    .row-qty { display: flex; align-items: center; justify-content: center; gap: 8px; }
-    .qty-btn {
-      width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid var(--border);
-      background: transparent; cursor: pointer; font-size: 16px;
-    }
-    .qty-input {
-      width: 36px; text-align: center; border: none; background: transparent;
-      font-family: var(--mono); font-size: 15px;
+    .row-label {
+      font-family: var(--mono);
+      font-size: 15px;
+      font-weight: 500;
+      padding: 14px 0;
     }
 
-    .row-sub { font-family: var(--mono); font-size: 14px; color: var(--muted); text-align: right; padding: 14px 0; }
+    .row-qty {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .qty-btn {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: 1.5px solid var(--border);
+      background: transparent;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .qty-input {
+      width: 36px;
+      text-align: center;
+      border: none;
+      background: transparent;
+      font-family: var(--mono);
+      font-size: 15px;
+    }
+
+    .row-sub {
+      font-family: var(--mono);
+      font-size: 14px;
+      color: var(--muted);
+      text-align: right;
+      padding: 14px 0;
+    }
+
     .row-sub.has-value { color: var(--accent); font-weight: 500; }
 
     .totals-grid {
@@ -240,6 +252,7 @@
       font-family: var(--mono);
       font-size: 23px;
       font-weight: 500;
+      color: var(--text);
     }
 
     .pie-container {
@@ -249,6 +262,15 @@
       border-radius: 12px;
       padding: 20px;
       text-align: center;
+    }
+
+    .pie-title {
+      font-family: var(--mono);
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 16px;
     }
 
     .reset-btn {
@@ -277,7 +299,6 @@
     <button class="menu-btn" onclick="toggleMenu()">☰</button>
   </header>
 
-  <!-- Objectif d'épargne -->
   <div class="goal-section">
     <div class="goal-input">
       <label>Objectif d'épargne :</label>
@@ -331,11 +352,9 @@
 <!-- Menu latéral -->
 <div class="menu" id="side-menu">
   <h2 style="margin-bottom:20px; font-size:18px;">Menu</h2>
-  
   <div class="menu-item" onclick="exportToPDF()">📄 Exporter en PDF</div>
   
-  <div style="margin: 20px 0 10px; font-family:var(--mono); font-size:13px; color:var(--muted);">Comptes Bancaires</div>
-  
+  <div style="margin: 25px 0 10px; font-family:var(--mono); font-size:13px; color:var(--muted);">Comptes Bancaires</div>
   <div id="bank-accounts-list"></div>
   
   <div style="margin-top:20px;">
@@ -346,7 +365,6 @@
 </div>
 
 <script>
-  // Denominations mises à jour (suppression des pièces 0,10 € à 0,50 €)
   const denominations = [
     { label: "0,01 €", value: 0.01, type: "coin" },
     { label: "0,02 €", value: 0.02, type: "coin" },
@@ -369,7 +387,6 @@
   let bankAccounts = [];
   let pieChart;
 
-  // Charger données
   const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
   if (saved.quantities) quantities = saved.quantities;
   if (saved.savingsGoal) savingsGoal = saved.savingsGoal;
@@ -380,10 +397,7 @@
   }
 
   function saveData() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      quantities, savingsGoal, bankAccounts,
-      updatedAt: new Date().toISOString()
-    }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ quantities, savingsGoal, bankAccounts, updatedAt: new Date().toISOString() }));
   }
 
   function calculateTotals() {
@@ -434,7 +448,7 @@
     }
   }
 
-  function updatePieChart() { /* identique à la version précédente */ 
+  function updatePieChart() {
     const { totalCoins, totalBills, total } = calculateTotals();
     const ctx = document.getElementById('pieChart');
     if (pieChart) pieChart.destroy();
@@ -476,7 +490,7 @@
     updateTotals();
   }
 
-  // Render rows
+  // Rendu des lignes
   const container = document.getElementById('rows');
   denominations.forEach((d, i) => {
     const row = document.createElement('div');
@@ -495,7 +509,7 @@
 
   document.getElementById('goal-input').value = savingsGoal;
 
-  // === MENU & BANK ACCOUNTS ===
+  // Menu & Comptes bancaires
   function toggleMenu() {
     document.getElementById('side-menu').classList.toggle('open');
   }
@@ -536,8 +550,8 @@
     saveData();
   }
 
-  // === EXPORT PDF ===
-  async function exportToPDF() {
+  // Export PDF
+  function exportToPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     const { totalCoins, totalBills, total } = calculateTotals();
@@ -550,15 +564,14 @@
     doc.setFontSize(11);
     doc.text(`Date : ${date}`, 20, 35);
 
-    // Tableau
     let y = 50;
     doc.setFontSize(12);
-    doc.text("Détail :", 20, y);
+    doc.text("Détail des pièces et billets :", 20, y);
     y += 10;
 
     denominations.forEach((d, i) => {
       if (quantities[i] > 0) {
-        doc.text(`${d.label} × ${quantities[i]} = ${fmt(d.value * quantities[i])}`, 20, y);
+        doc.text(`${d.label} × ${quantities[i]} → ${fmt(d.value * quantities[i])}`, 20, y);
         y += 8;
       }
     });
@@ -567,14 +580,13 @@
     doc.text(`Total Pièces : ${fmt(totalCoins)}`, 20, y); y += 8;
     doc.text(`Total Billets : ${fmt(totalBills)}`, 20, y); y += 8;
     doc.setFontSize(14);
-    doc.text(`TOTAL GÉNÉRAL : ${fmt(total)}`, 20, y); y += 15;
+    doc.text(`TOTAL : ${fmt(total)}`, 20, y); y += 15;
 
     if (savingsGoal > 0) {
       const perc = Math.round((total / savingsGoal) * 100);
-      doc.text(`Objectif d'épargne : ${fmt(savingsGoal)} (${perc} % atteint)`, 20, y);
+      doc.text(`Objectif d'épargne : ${fmt(savingsGoal)} (${perc}% atteint)`, 20, y);
     }
 
-    // Comptes bancaires
     if (bankAccounts.length > 0) {
       y += 15;
       doc.text("Comptes Bancaires :", 20, y); y += 10;
@@ -588,7 +600,7 @@
     toggleMenu();
   }
 
-  // Init
+  // Initialisation
   renderBankAccounts();
   updateTotals();
 </script>
