@@ -38,13 +38,8 @@
     }
 
     header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
+      margin-bottom: 28px;
     }
-
-    header .title { flex: 1; }
 
     header h1 {
       font-family: var(--mono);
@@ -61,41 +56,6 @@
       font-weight: 600;
       color: var(--text);
     }
-
-    .menu-btn {
-      width: 40px;
-      height: 40px;
-      border: 1px solid var(--border);
-      background: var(--surface);
-      border-radius: 50%;
-      font-size: 20px;
-      cursor: pointer;
-    }
-
-    .menu {
-      position: fixed;
-      top: 0;
-      right: -280px;
-      width: 280px;
-      height: 100vh;
-      background: white;
-      box-shadow: -4px 0 20px rgba(0,0,0,0.1);
-      transition: right 0.3s ease;
-      padding: 80px 20px 20px;
-      z-index: 1000;
-      overflow-y: auto;
-    }
-
-    .menu.open { right: 0; }
-
-    .menu-item {
-      padding: 14px 16px;
-      border-bottom: 1px solid var(--border);
-      font-family: var(--mono);
-      cursor: pointer;
-    }
-
-    .menu-item:hover { background: #f8f7f4; }
 
     .goal-section {
       margin-top: 20px;
@@ -198,22 +158,13 @@
     }
 
     .qty-btn {
-      width: 26px;
-      height: 26px;
-      border-radius: 50%;
-      border: 1.5px solid var(--border);
-      background: transparent;
-      cursor: pointer;
-      font-size: 16px;
+      width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid var(--border);
+      background: transparent; cursor: pointer; font-size: 16px;
     }
 
     .qty-input {
-      width: 36px;
-      text-align: center;
-      border: none;
-      background: transparent;
-      font-family: var(--mono);
-      font-size: 15px;
+      width: 36px; text-align: center; border: none; background: transparent;
+      font-family: var(--mono); font-size: 15px;
     }
 
     .row-sub {
@@ -223,7 +174,6 @@
       text-align: right;
       padding: 14px 0;
     }
-
     .row-sub.has-value { color: var(--accent); font-weight: 500; }
 
     .totals-grid {
@@ -273,8 +223,16 @@
       margin-bottom: 16px;
     }
 
-    .reset-btn {
+    .bank-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
       margin-top: 20px;
+    }
+
+    .reset-btn, .export-btn {
+      margin-top: 14px;
       width: 100%;
       padding: 12px;
       border: 1.5px solid var(--border);
@@ -287,16 +245,22 @@
       color: var(--muted);
       cursor: pointer;
     }
+
+    .export-btn {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+      margin-top: 8px;
+    }
+
+    .reset-btn:hover { border-color: #c0392b; color: #c0392b; }
   </style>
 </head>
 <body>
 <div class="app">
   <header>
-    <div class="title">
-      <h1>Calculateur</h1>
-      <p>Compter mon cash 💶</p>
-    </div>
-    <button class="menu-btn" onclick="toggleMenu()">☰</button>
+    <h1>Calculateur</h1>
+    <p>Compter mon cash 💶</p>
   </header>
 
   <div class="goal-section">
@@ -345,30 +309,29 @@
     <canvas id="pieChart" width="300" height="300"></canvas>
   </div>
 
+  <!-- Section Comptes Bancaires -->
+  <div class="bank-section">
+    <h3 style="font-family:var(--mono); font-size:14px; margin-bottom:12px; color:var(--muted);">Comptes Bancaires</h3>
+    <div id="bank-accounts-list"></div>
+    
+    <div style="margin-top:16px; display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+      <input type="text" id="bank-name" placeholder="Nom du compte" style="padding:10px; border:1.5px solid var(--border); border-radius:8px;">
+      <input type="number" id="bank-amount" placeholder="Montant €" step="0.01" style="padding:10px; border:1.5px solid var(--border); border-radius:8px;">
+    </div>
+    <button onclick="addBankAccount()" style="width:100%; margin-top:10px; padding:12px; background:var(--accent); color:white; border:none; border-radius:8px; font-family:var(--mono);">+ Ajouter compte</button>
+  </div>
+
+  <button class="export-btn" onclick="exportToPDF()">📄 Exporter en PDF</button>
   <button class="reset-btn" onclick="resetAll()">↺ &nbsp;Tout réinitialiser</button>
   <p id="last-saved" style="margin-top:10px; text-align:center; font-family:'DM Mono',monospace; font-size:11px; color:#aaa;"></p>
 </div>
 
-<!-- Menu latéral -->
-<div class="menu" id="side-menu">
-  <h2 style="margin-bottom:20px; font-size:18px;">Menu</h2>
-  <div class="menu-item" onclick="exportToPDF()">📄 Exporter en PDF</div>
-  
-  <div style="margin: 25px 0 10px; font-family:var(--mono); font-size:13px; color:var(--muted);">Comptes Bancaires</div>
-  <div id="bank-accounts-list"></div>
-  
-  <div style="margin-top:20px;">
-    <input type="text" id="bank-name" placeholder="Nom du compte" style="width:100%; padding:10px; margin-bottom:8px; border:1px solid var(--border); border-radius:8px;">
-    <input type="number" id="bank-amount" placeholder="Montant (€)" step="0.01" style="width:100%; padding:10px; margin-bottom:8px; border:1px solid var(--border); border-radius:8px;">
-    <button onclick="addBankAccount()" style="width:100%; padding:12px; background:var(--accent); color:white; border:none; border-radius:8px; font-family:var(--mono);">+ Ajouter compte</button>
-  </div>
-</div>
-
 <script>
+  // Denominations corrigées : suppression des 0,01 / 0,02 / 0,05 €
   const denominations = [
-    { label: "0,01 €", value: 0.01, type: "coin" },
-    { label: "0,02 €", value: 0.02, type: "coin" },
-    { label: "0,05 €", value: 0.05, type: "coin" },
+    { label: "0,10 €", value: 0.10, type: "coin" },
+    { label: "0,20 €", value: 0.20, type: "coin" },
+    { label: "0,50 €", value: 0.50, type: "coin" },
     { label: "1,00 €", value: 1, type: "coin" },
     { label: "2,00 €", value: 2, type: "coin" },
     { label: "5,00 €", value: 5, type: "bill" },
@@ -380,7 +343,7 @@
     { label: "500,00 €", value: 500, type: "bill" },
   ];
 
-  const STORAGE_KEY = 'euro-calculator-v3';
+  const STORAGE_KEY = 'euro-calculator-v4';
 
   let quantities = new Array(denominations.length).fill(0);
   let savingsGoal = 0;
@@ -397,7 +360,10 @@
   }
 
   function saveData() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ quantities, savingsGoal, bankAccounts, updatedAt: new Date().toISOString() }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      quantities, savingsGoal, bankAccounts,
+      updatedAt: new Date().toISOString()
+    }));
   }
 
   function calculateTotals() {
@@ -509,11 +475,7 @@
 
   document.getElementById('goal-input').value = savingsGoal;
 
-  // Menu & Comptes bancaires
-  function toggleMenu() {
-    document.getElementById('side-menu').classList.toggle('open');
-  }
-
+  // Comptes bancaires
   function renderBankAccounts() {
     const list = document.getElementById('bank-accounts-list');
     list.innerHTML = '';
@@ -526,7 +488,7 @@
       div.innerHTML = `
         <strong>${acc.name}</strong><br>
         <span style="color:var(--accent)">${fmt(acc.amount)}</span>
-        <button onclick="removeBankAccount(${idx})" style="float:right; background:none; border:none; color:#c0392b; font-size:18px;">×</button>
+        <button onclick="removeBankAccount(${idx})" style="float:right;background:none;border:none;color:#c0392b;font-size:18px;">×</button>
       `;
       list.appendChild(div);
     });
@@ -550,7 +512,7 @@
     saveData();
   }
 
-  // Export PDF
+  // Export PDF (beau et coloré)
   function exportToPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
@@ -558,33 +520,32 @@
     const date = new Date().toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' });
 
     doc.setFont("helvetica");
-    doc.setFontSize(20);
-    doc.text("Compter mon cash 💶", 105, 20, { align: "center" });
+    doc.setFontSize(22);
+    doc.text("Compter mon cash 💶", 105, 25, { align: "center" });
 
     doc.setFontSize(11);
-    doc.text(`Date : ${date}`, 20, 35);
+    doc.text(`Date : ${date}`, 20, 40);
 
-    let y = 50;
-    doc.setFontSize(12);
-    doc.text("Détail des pièces et billets :", 20, y);
-    y += 10;
+    let y = 55;
+    doc.setFontSize(13);
+    doc.text("Détail :", 20, y); y += 10;
 
     denominations.forEach((d, i) => {
       if (quantities[i] > 0) {
-        doc.text(`${d.label} × ${quantities[i]} → ${fmt(d.value * quantities[i])}`, 20, y);
-        y += 8;
+        doc.text(`${d.label} × ${quantities[i]} = ${fmt(d.value * quantities[i])}`, 20, y);
+        y += 9;
       }
     });
 
-    y += 10;
-    doc.text(`Total Pièces : ${fmt(totalCoins)}`, 20, y); y += 8;
-    doc.text(`Total Billets : ${fmt(totalBills)}`, 20, y); y += 8;
-    doc.setFontSize(14);
-    doc.text(`TOTAL : ${fmt(total)}`, 20, y); y += 15;
+    y += 8;
+    doc.text(`Total Pièces : ${fmt(totalCoins)}`, 20, y); y += 9;
+    doc.text(`Total Billets : ${fmt(totalBills)}`, 20, y); y += 9;
+    doc.setFontSize(15);
+    doc.text(`TOTAL GÉNÉRAL : ${fmt(total)}`, 20, y); y += 18;
 
     if (savingsGoal > 0) {
       const perc = Math.round((total / savingsGoal) * 100);
-      doc.text(`Objectif d'épargne : ${fmt(savingsGoal)} (${perc}% atteint)`, 20, y);
+      doc.text(`Objectif d'épargne : ${fmt(savingsGoal)} (${perc} % atteint)`, 20, y);
     }
 
     if (bankAccounts.length > 0) {
@@ -592,15 +553,14 @@
       doc.text("Comptes Bancaires :", 20, y); y += 10;
       bankAccounts.forEach(acc => {
         doc.text(`${acc.name} : ${fmt(acc.amount)}`, 20, y);
-        y += 8;
+        y += 9;
       });
     }
 
     doc.save(`cash_${new Date().toISOString().slice(0,10)}.pdf`);
-    toggleMenu();
   }
 
-  // Initialisation
+  // Init
   renderBankAccounts();
   updateTotals();
 </script>
