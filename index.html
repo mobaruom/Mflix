@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Calculateur Euro</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;600&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -21,6 +21,8 @@
       --sans: 'DM Sans', sans-serif;
     }
 
+    html { touch-action: manipulation; }
+
     body {
       font-family: var(--sans);
       background: var(--bg);
@@ -30,6 +32,11 @@
       align-items: flex-start;
       justify-content: center;
       padding: 32px 16px 64px;
+      touch-action: manipulation;
+    }
+
+    button, input {
+      touch-action: manipulation;
     }
 
     .app {
@@ -86,7 +93,7 @@
       border: 1.5px solid var(--border);
       border-radius: 8px;
       font-family: var(--mono);
-      font-size: 18px;
+      font-size: 16px;
       text-align: right;
     }
 
@@ -158,13 +165,17 @@
     }
 
     .qty-btn {
-      width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid var(--border);
+      width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid var(--border);
       background: transparent; cursor: pointer; font-size: 16px;
+      display: flex; align-items: center; justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
     }
+    .qty-btn:active { background: var(--bg); }
 
     .qty-input {
-      width: 36px; text-align: center; border: none; background: transparent;
-      font-family: var(--mono); font-size: 15px;
+      width: 40px; text-align: center; border: none; background: transparent;
+      font-family: var(--mono); font-size: 16px;
     }
 
     .row-sub {
@@ -231,6 +242,30 @@
       margin-top: 20px;
     }
 
+    .bank-section h3 {
+      font-family: var(--mono);
+      font-size: 14px;
+      margin-bottom: 6px;
+      color: var(--muted);
+    }
+
+    .bank-section .hint {
+      font-size: 12.5px;
+      color: var(--muted);
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }
+
+    .bank-section input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-family: var(--mono);
+      font-size: 16px;
+      text-align: right;
+    }
+
     .reset-btn, .export-btn {
       margin-top: 14px;
       width: 100%;
@@ -266,7 +301,7 @@
   <div class="goal-section">
     <div class="goal-input">
       <label>Objectif d'épargne :</label>
-      <input type="number" id="goal-input" value="0" min="0" step="10" oninput="updateGoal()">
+      <input type="number" id="goal-input" value="0" min="0" step="10" inputmode="decimal" oninput="updateGoal()">
     </div>
     <div class="progress-container" id="progress-container" style="display: none;">
       <div class="progress-info">
@@ -309,16 +344,11 @@
     <canvas id="pieChart" width="300" height="300"></canvas>
   </div>
 
-  <!-- Comptes Bancaires -->
+  <!-- Épargne bancaire -->
   <div class="bank-section">
-    <h3 style="font-family:var(--mono); font-size:14px; margin-bottom:12px; color:var(--muted);">Comptes Bancaires</h3>
-    <div id="bank-accounts-list"></div>
-    
-    <div style="margin-top:16px; display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-      <input type="text" id="bank-name" placeholder="Nom du compte" style="padding:10px; border:1.5px solid var(--border); border-radius:8px;">
-      <input type="number" id="bank-amount" placeholder="Montant €" step="0.01" style="padding:10px; border:1.5px solid var(--border); border-radius:8px;">
-    </div>
-    <button onclick="addBankAccount()" style="width:100%; margin-top:10px; padding:12px; background:var(--accent); color:white; border:none; border-radius:8px; font-family:var(--mono);">+ Ajouter compte</button>
+    <h3>Épargne bancaire</h3>
+    <p class="hint">Indique ici le total que tu as déjà sur tes comptes (à additionner toi-même). Ce montant s'ajoute au total général et à ton objectif.</p>
+    <input type="number" id="other-savings-input" placeholder="Montant total en banque (€)" min="0" step="0.01" inputmode="decimal" oninput="updateOtherSavings()">
   </div>
 
   <button class="export-btn" onclick="exportToPDF()">📄 Exporter en PDF</button>
@@ -342,17 +372,17 @@
     { label: "500,00 €", value: 500, type: "bill" },
   ];
 
-  const STORAGE_KEY = 'euro-calculator-v5';
+  const STORAGE_KEY = 'euro-calculator-v6';
 
   let quantities = new Array(denominations.length).fill(0);
   let savingsGoal = 0;
-  let bankAccounts = [];
+  let otherSavings = 0;
   let pieChart;
 
   const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
   if (saved.quantities) quantities = saved.quantities;
   if (saved.savingsGoal) savingsGoal = saved.savingsGoal;
-  if (saved.bankAccounts) bankAccounts = saved.bankAccounts;
+  if (saved.otherSavings) otherSavings = saved.otherSavings;
 
   function fmt(n) {
     return n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
@@ -360,7 +390,7 @@
 
   function saveData() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      quantities, savingsGoal, bankAccounts,
+      quantities, savingsGoal, otherSavings,
       updatedAt: new Date().toISOString()
     }));
   }
@@ -373,12 +403,12 @@
       if (d.type === "coin") totalCoins += amount;
       else totalBills += amount;
     });
-    const totalBank = bankAccounts.reduce((sum, acc) => sum + acc.amount, 0);
-    return { totalCoins, totalBills, totalCash, totalBank, grandTotal: totalCash + totalBank };
+    const grandTotal = totalCash + otherSavings;
+    return { totalCoins, totalBills, totalCash, otherSavings, grandTotal };
   }
 
   function updateTotals() {
-    const { totalCoins, totalBills, totalCash, totalBank, grandTotal } = calculateTotals();
+    const { totalCoins, totalBills, grandTotal } = calculateTotals();
     document.getElementById('total').textContent = fmt(grandTotal);
     document.getElementById('total-coins').textContent = fmt(totalCoins);
     document.getElementById('total-bills').textContent = fmt(totalBills);
@@ -400,22 +430,27 @@
     updateTotals();
   }
 
+  function updateOtherSavings() {
+    otherSavings = parseFloat(document.getElementById('other-savings-input').value) || 0;
+    updateTotals();
+  }
+
   function updateGoalDisplay() {
-    const { totalCash } = calculateTotals();
+    const { grandTotal } = calculateTotals();
     const container = document.getElementById('progress-container');
     if (savingsGoal > 0) {
       container.style.display = 'block';
-      const perc = Math.min(100, Math.round((totalCash / savingsGoal) * 100));
+      const perc = Math.min(100, Math.round((grandTotal / savingsGoal) * 100));
       document.getElementById('progress-fill').style.width = perc + '%';
       document.getElementById('progress-text').textContent = perc + ' % atteint';
-      document.getElementById('goal-remaining').textContent = fmt(Math.max(0, savingsGoal - totalCash)) + ' restant';
+      document.getElementById('goal-remaining').textContent = fmt(Math.max(0, savingsGoal - grandTotal)) + ' restant';
     } else {
       container.style.display = 'none';
     }
   }
 
   function updatePieChart() {
-    const { totalCoins, totalBills, totalCash, totalBank } = calculateTotals();
+    const { totalCoins, totalBills, otherSavings, grandTotal } = calculateTotals();
     const ctx = document.getElementById('pieChart');
     if (pieChart) pieChart.destroy();
 
@@ -423,9 +458,9 @@
 
     if (totalCoins > 0) { data.push(totalCoins); labels.push('Pièces'); colors.push('#4ade80'); }
     if (totalBills > 0) { data.push(totalBills); labels.push('Billets'); colors.push('#2d6a4f'); }
-    if (totalBank > 0) { data.push(totalBank); labels.push('Comptes Bancaires'); colors.push('#60a5fa'); }
+    if (otherSavings > 0) { data.push(otherSavings); labels.push('Épargne bancaire'); colors.push('#60a5fa'); }
     if (savingsGoal > 0) {
-      const rem = Math.max(0, savingsGoal - totalCash);
+      const rem = Math.max(0, savingsGoal - grandTotal);
       if (rem > 0) { data.push(rem); labels.push('Vers objectif'); colors.push('#e0ddd6'); }
     }
 
@@ -444,10 +479,16 @@
     });
   }
 
+  // Anti-rebond : évite les doubles déclenchements quand on appuie vite plusieurs fois de suite,
+  // qui provoquaient un zoom involontaire (geste "double-tap" du navigateur mobile)
+  let qtyBusy = false;
   function changeQty(i, delta) {
+    if (qtyBusy) return;
+    qtyBusy = true;
     quantities[i] = Math.max(0, quantities[i] + delta);
     document.getElementById('qty-' + i).value = quantities[i];
     updateTotals();
+    setTimeout(() => { qtyBusy = false; }, 60);
   }
 
   function onInput(i) {
@@ -460,10 +501,9 @@
     if (!confirm('Tout réinitialiser ?')) return;
     quantities.fill(0);
     savingsGoal = 0;
-    bankAccounts = [];
+    otherSavings = 0;
     document.getElementById('goal-input').value = 0;
-    document.getElementById('bank-name').value = '';
-    document.getElementById('bank-amount').value = '';
+    document.getElementById('other-savings-input').value = '';
     denominations.forEach((_, i) => document.getElementById('qty-' + i).value = 0);
     updateTotals();
   }
@@ -476,9 +516,9 @@
     row.innerHTML = `
       <span class="row-label">${d.label}</span>
       <div class="row-qty">
-        <button class="qty-btn" onclick="changeQty(${i}, -1)">−</button>
-        <input class="qty-input" id="qty-${i}" type="number" value="${quantities[i]}" oninput="onInput(${i})" />
-        <button class="qty-btn" onclick="changeQty(${i}, 1)">+</button>
+        <button type="button" class="qty-btn" onclick="changeQty(${i}, -1)">−</button>
+        <input class="qty-input" id="qty-${i}" type="number" inputmode="numeric" value="${quantities[i]}" oninput="onInput(${i})" />
+        <button type="button" class="qty-btn" onclick="changeQty(${i}, 1)">+</button>
       </div>
       <span class="row-sub" id="sub-${i}">—</span>
     `;
@@ -486,49 +526,13 @@
   });
 
   document.getElementById('goal-input').value = savingsGoal;
-
-  // Comptes bancaires
-  function renderBankAccounts() {
-    const list = document.getElementById('bank-accounts-list');
-    list.innerHTML = '';
-    bankAccounts.forEach((acc, idx) => {
-      const div = document.createElement('div');
-      div.style.padding = '12px';
-      div.style.background = '#f8f7f4';
-      div.style.borderRadius = '8px';
-      div.style.marginBottom = '8px';
-      div.innerHTML = `
-        <strong>${acc.name}</strong><br>
-        <span style="color:var(--accent)">${fmt(acc.amount)}</span>
-        <button onclick="removeBankAccount(${idx})" style="float:right;background:none;border:none;color:#c0392b;font-size:18px;">×</button>
-      `;
-      list.appendChild(div);
-    });
-  }
-
-  function addBankAccount() {
-    const name = document.getElementById('bank-name').value.trim();
-    const amount = parseFloat(document.getElementById('bank-amount').value) || 0;
-    if (name && amount > 0) {
-      bankAccounts.push({ name, amount });
-      document.getElementById('bank-name').value = '';
-      document.getElementById('bank-amount').value = '';
-      renderBankAccounts();
-      updateTotals();
-    }
-  }
-
-  function removeBankAccount(idx) {
-    bankAccounts.splice(idx, 1);
-    renderBankAccounts();
-    updateTotals();
-  }
+  document.getElementById('other-savings-input').value = otherSavings > 0 ? otherSavings : '';
 
   // Export PDF
   function exportToPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-    const { totalCoins, totalBills, totalCash, totalBank, grandTotal } = calculateTotals();
+    const { totalCoins, totalBills, totalCash, otherSavings, grandTotal } = calculateTotals();
     const date = new Date().toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' });
 
     doc.setFont("helvetica");
@@ -555,21 +559,20 @@
     doc.setFontSize(15);
     doc.text(`TOTAL CASH : ${fmt(totalCash)}`, 20, y); y += 15;
 
-    if (totalBank > 0) {
-      doc.text(`Comptes Bancaires : ${fmt(totalBank)}`, 20, y); y += 12;
+    if (otherSavings > 0) {
+      doc.text(`Épargne bancaire : ${fmt(otherSavings)}`, 20, y); y += 12;
     }
 
     doc.text(`GRAND TOTAL : ${fmt(grandTotal)}`, 20, y); y += 18;
 
     if (savingsGoal > 0) {
-      const perc = Math.round((totalCash / savingsGoal) * 100);
+      const perc = Math.round((grandTotal / savingsGoal) * 100);
       doc.text(`Objectif d'épargne : ${fmt(savingsGoal)} (${perc} % atteint)`, 20, y);
     }
 
     doc.save(`cash_${new Date().toISOString().slice(0,10)}.pdf`);
   }
 
-  renderBankAccounts();
   updateTotals();
 </script>
 </body>
